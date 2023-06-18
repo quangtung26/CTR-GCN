@@ -236,6 +236,7 @@ class Processor():
         self.lr = self.arg.base_lr
         self.best_acc = 0
         self.best_acc_epoch = 0
+        self.output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
 
         self.model = self.model.cuda(self.output_device)
 
@@ -245,6 +246,8 @@ class Processor():
                     self.model,
                     device_ids=self.arg.device,
                     output_device=self.output_device)
+        # else:
+        #     self.model = self.model.cuda(self.output_device)
 
     def load_data(self):
         Feeder = import_class(self.arg.feeder)
@@ -266,8 +269,8 @@ class Processor():
             worker_init_fn=init_seed)
 
     def load_model(self):
-        output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
-        self.output_device = output_device
+        # output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
+        # self.output_device = output_device
         Model = import_class(self.arg.model)
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
         # print(Model)
