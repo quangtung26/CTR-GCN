@@ -192,7 +192,7 @@ class CTRGC(nn.Module):
 
 
     def forward(self, x, A=None, alpha=1):
-        # x = self.shift_gcn(x)
+        x = self.shift_gcn(x)
         x1, x2, x3 = self.conv1(x).mean(-2), self.conv2(x).mean(-2), self.conv3(x)
         x1 = self.tanh(x1.unsqueeze(-1) - x2.unsqueeze(-2))
         x1 = self.conv4(x1) * alpha + (A.unsqueeze(0).unsqueeze(0) if A is not None else 0)  # N,C,V,V
@@ -269,8 +269,6 @@ class unit_gcn(nn.Module):
         y = self.bn(y)
         y += self.down(x)
         y = self.relu(y)
-
-
         return y
 
 

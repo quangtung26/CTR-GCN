@@ -105,3 +105,13 @@ def import_class(name):
     for comp in components[1:]:
         mod = getattr(mod, comp)
     return mod
+
+
+if __name__ == '__main__':
+    import torch
+    dataset = Feeder(data_path='data/ntu/NTU60_CV.npz', split='train', window_size=64, p_interval=[0.95])
+    data_loader = torch.utils.data.DataLoader(
+                dataset=dataset, batch_size=4)
+    for x, y, i in data_loader:
+        print(x.shape, y)
+        break
