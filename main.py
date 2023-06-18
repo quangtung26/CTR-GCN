@@ -269,8 +269,8 @@ class Processor():
             worker_init_fn=init_seed)
 
     def load_model(self):
-        # output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
-        # self.output_device = output_device
+        output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
+        self.output_device = output_device
         Model = import_class(self.arg.model)
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
         # print(Model)
