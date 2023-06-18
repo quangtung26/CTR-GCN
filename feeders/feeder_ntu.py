@@ -115,3 +115,5 @@ if __name__ == '__main__':
     for x, y, i in data_loader:
         print(x.shape, y)
         break
+
+    print(len(dataset))
