@@ -164,8 +164,8 @@ def get_parser():
         help='the epoch where optimizer reduce the learning rate')
     parser.add_argument(
         '--device',
-        type=int,
-        default=0,
+        type=list,
+        default=[0],
         nargs='+',
         help='the indexes of GPUs for training or testing')
     parser.add_argument('--optimizer', default='SGD', help='type of optimizer')
