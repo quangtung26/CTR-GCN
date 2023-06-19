@@ -237,8 +237,6 @@ class Processor():
         self.best_acc = 0
         self.best_acc_epoch = 0
 
-        print(self.arg.device)
-        print(self.output_device)
 
         self.model = self.model.cuda(self.output_device)
 
