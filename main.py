@@ -164,8 +164,8 @@ def get_parser():
         help='the epoch where optimizer reduce the learning rate')
     parser.add_argument(
         '--device',
-        type=list,
-        default=[0, 1],
+        type=int,
+        default=0,
         nargs='+',
         help='the indexes of GPUs for training or testing')
     parser.add_argument('--optimizer', default='SGD', help='type of optimizer')
@@ -239,7 +239,7 @@ class Processor():
 
         print(self.arg.device)
         print(self.output_device)
-        
+
         self.model = self.model.cuda(self.output_device)
 
         if type(self.arg.device) is list:
@@ -248,8 +248,7 @@ class Processor():
                     self.model,
                     device_ids=self.arg.device,
                     output_device=self.output_device)
-        # else:
-        #     self.model = self.model.cuda(self.output_device)
+
 
     def load_data(self):
         Feeder = import_class(self.arg.feeder)
