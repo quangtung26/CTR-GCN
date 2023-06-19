@@ -34,7 +34,7 @@ lr_decay_rate: 0.1
 step: [50]
 
 # training
-device: 0
+device: [0, 1]
 batch_size: 16
 test_batch_size: 64
 num_epoch: 100

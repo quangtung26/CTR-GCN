@@ -165,7 +165,7 @@ def get_parser():
     parser.add_argument(
         '--device',
         type=list,
-        default=[0],
+        default=[0, 1],
         nargs='+',
         help='the indexes of GPUs for training or testing')
     parser.add_argument('--optimizer', default='SGD', help='type of optimizer')
@@ -236,8 +236,10 @@ class Processor():
         self.lr = self.arg.base_lr
         self.best_acc = 0
         self.best_acc_epoch = 0
-        self.output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
 
+        print(self.arg.device)
+        print(self.output_device)
+        
         self.model = self.model.cuda(self.output_device)
 
         if type(self.arg.device) is list:
@@ -269,7 +271,6 @@ class Processor():
             worker_init_fn=init_seed)
 
     def load_model(self):
-        print(type(self.arg.device))
         output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
         self.output_device = output_device
         Model = import_class(self.arg.model)
