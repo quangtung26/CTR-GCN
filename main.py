@@ -242,10 +242,12 @@ class Processor():
 
         if type(self.arg.device) is list:
             if len(self.arg.device) > 1:
+                # self.model = nn.DataParallel(
+                #     self.model,
+                #     device_ids=self.arg.device,
+                #     output_device=self.output_device)
                 self.model = nn.DataParallel(
-                    self.model,
-                    device_ids=self.arg.device,
-                    output_device=self.output_device)
+                    self.model)
 
 
     def load_data(self):
