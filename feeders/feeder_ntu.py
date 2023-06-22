@@ -113,7 +113,7 @@ if __name__ == '__main__':
     data_loader = torch.utils.data.DataLoader(
                 dataset=dataset, batch_size=4)
     for x, y, i in data_loader:
-        print(x.shape, y)
+        print(x[0, :, 0, :, :])
         break
 
-    print(len(dataset))
+    # print(len(dataset))

@@ -3,4 +3,5 @@
 /work_dir/*
 /visualization/*
 /__pycache__
+/kaggle_output
 data.zip

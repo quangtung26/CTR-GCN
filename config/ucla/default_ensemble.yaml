@@ -1,0 +1,40 @@
+# feeder
+feeder: feeders.feeder_ucla.Feeder
+train_feeder_args:
+  data_path: joint
+  label_path: train
+  debug: False
+  random_choose: True
+  random_shift: False
+  random_move: False
+  window_size: 52
+  normalization: False
+  repeat: 5
+
+test_feeder_args:
+  data_path: joint
+  label_path: val
+  debug: False
+
+
+# model
+model: model.ensemble.Model
+model_args:
+    J_weight: work_dir/ucla_J/ctrgcn/runs-52-16536.pt
+    B_weight: work_dir/ucla_B/ctrgcn/runs-30-9540.pt
+    JM_weight: work_dir/ucla_JM/ctrgcn/runs-63-20034.pt
+    BM_weight: work_dir/ucla_BM/ctrgcn/runs-60-19080.pt
+
+#optim
+weight_decay: 0.0001
+base_lr: 0.1
+lr_decay_rate: 0.1
+step: [50]
+
+# training
+device: [0]
+batch_size: 16
+test_batch_size: 64
+num_epoch: 10
+nesterov: True
+warm_up_epoch: 0

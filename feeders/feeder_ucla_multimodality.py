@@ -156,7 +156,7 @@ class Feeder(Dataset):
         data_new = []
 
         data_new.append(joint)
-        data_new.append(velocity)
+        # data_new.append(velocity)
         # data_new.append(bone)
 
         data_new = np.stack(data_new, axis=0)

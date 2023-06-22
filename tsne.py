@@ -1,5 +1,21 @@
 from __future__ import print_function
 
+#Import numpy
+import numpy as np
+
+#Import scikitlearn for machine learning functionalities
+import sklearn
+from sklearn.manifold import TSNE 
+from sklearn.datasets import load_digits # For the UCI ML handwritten digits dataset
+
+# Import matplotlib for plotting graphs ans seaborn for attractive graphics.
+import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.patheffects as pe
+
+import seaborn as sb
+
+
 import argparse
 import inspect
 import os
@@ -26,11 +42,6 @@ from tqdm import tqdm
 
 from torchlight import DictAction
 
-
-# import resource
-# rlimit = resource.getrlimit(resource.RLIMIT_NOFILE)
-# resource.setrlimit(resource.RLIMIT_NOFILE, (2048, rlimit[1]))
-
 def init_seed(seed):
     torch.cuda.manual_seed_all(seed)
     torch.manual_seed(seed)
@@ -52,7 +63,7 @@ def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
+        return Falsegraph
     else:
         raise argparse.ArgumentTypeError('Unsupported value encountered.')
 
@@ -82,6 +93,10 @@ def get_parser():
         help='if ture, the classification score will be stored')
 
     # visulize and debug
+
+    parser.add_argument(
+        '--tsne', type=bool, default=False, help='tnse visualization')
+    
     parser.add_argument(
         '--seed', type=int, default=1, help='random seed for pytorch')
     parser.add_argument(
@@ -97,7 +112,7 @@ def get_parser():
     parser.add_argument(
         '--save-epoch',
         type=int,
-        default=1,
+        default=30,
         help='the start epoch to save model (#iteration)')
     parser.add_argument(
         '--eval-interval',
@@ -122,7 +137,7 @@ def get_parser():
     parser.add_argument(
         '--num-worker',
         type=int,
-        default=2,
+        default=8,
         help='the number of worker for data loader')
     parser.add_argument(
         '--train-feeder-args',
@@ -195,17 +210,11 @@ def get_parser():
         type=float,
         default=0.1,
         help='decay rate for learning rate')
-    
-
-    parser.add_argument(
-        'answer',
-        type=str,
-        default='n',
-        help='answer delete existing work_dir')
-    
     parser.add_argument('--warm_up_epoch', type=int, default=0)
 
     return parser
+
+
 
 
 class Processor():
@@ -216,23 +225,6 @@ class Processor():
     def __init__(self, arg):
         self.arg = arg
         self.save_arg()
-        if arg.phase == 'train':
-            if not arg.train_feeder_args['debug']:
-                arg.model_saved_name = os.path.join(arg.work_dir, 'runs')
-                if os.path.isdir(arg.model_saved_name):
-                    print('log_dir: ', arg.model_saved_name, 'already exist')
-                    # answer = input('delete it? y/n:')
-                    answer = 'n'
-                    if answer == 'y':
-                        shutil.rmtree(arg.model_saved_name)
-                        print('Dir removed: ', arg.model_saved_name)
-                        input('Refresh the website of tensorboard by pressing any keys')
-                    else:
-                        print('Dir not removed: ', arg.model_saved_name)
-                self.train_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'train'), 'train')
-                self.val_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'val'), 'val')
-            else:
-                self.train_writer = self.val_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'test'), 'test')
         self.global_step = 0
         # pdb.set_trace()
         self.load_model()
@@ -246,8 +238,8 @@ class Processor():
         self.best_acc = 0
         self.best_acc_epoch = 0
 
-
         self.model = self.model.cuda(self.output_device)
+    
 
         if type(self.arg.device) is list:
             if len(self.arg.device) > 1:
@@ -255,7 +247,6 @@ class Processor():
                     self.model,
                     device_ids=self.arg.device,
                     output_device=self.output_device)
-
 
     def load_data(self):
         Feeder = import_class(self.arg.feeder)
@@ -265,14 +256,14 @@ class Processor():
                 dataset=Feeder(**self.arg.train_feeder_args),
                 batch_size=self.arg.batch_size,
                 shuffle=True,
-                num_workers=self.arg.num_worker,
+                # num_workers=self.arg.num_worker,
                 drop_last=True,
                 worker_init_fn=init_seed)
         self.data_loader['test'] = torch.utils.data.DataLoader(
             dataset=Feeder(**self.arg.test_feeder_args),
             batch_size=self.arg.test_batch_size,
             shuffle=False,
-            num_workers=self.arg.num_worker,
+            # num_workers=self.arg.num_worker,
             drop_last=False,
             worker_init_fn=init_seed)
 
@@ -281,9 +272,9 @@ class Processor():
         self.output_device = output_device
         Model = import_class(self.arg.model)
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
-        # print(Model)
+
         self.model = Model(**self.arg.model_args)
-        # print(self.model)
+
         self.loss = nn.CrossEntropyLoss().cuda(output_device)
 
         if self.arg.weights:
@@ -344,18 +335,6 @@ class Processor():
             f.write(f"# command line: {' '.join(sys.argv)}\n\n")
             yaml.dump(arg_dict, f)
 
-    def adjust_learning_rate(self, epoch):
-        if self.arg.optimizer == 'SGD' or self.arg.optimizer == 'Adam':
-            if epoch < self.arg.warm_up_epoch:
-                lr = self.arg.base_lr * (epoch + 1) / self.arg.warm_up_epoch
-            else:
-                lr = self.arg.base_lr * (
-                        self.arg.lr_decay_rate ** np.sum(epoch >= np.array(self.arg.step)))
-            for param_group in self.optimizer.param_groups:
-                param_group['lr'] = lr
-            return lr
-        else:
-            raise ValueError()
 
     def print_time(self):
         localtime = time.asctime(time.localtime(time.time()))
@@ -369,6 +348,8 @@ class Processor():
         if self.arg.print_log:
             with open('{}/log.txt'.format(self.arg.work_dir), 'a') as f:
                 print(str, file=f)
+    
+
 
     def record_time(self):
         self.cur_time = time.time()
@@ -379,68 +360,7 @@ class Processor():
         self.record_time()
         return split_time
 
-    def train(self, epoch, save_model=False):
-        self.model.train()
-        self.print_log('Training epoch: {}'.format(epoch + 1))
-        loader = self.data_loader['train']
-        self.adjust_learning_rate(epoch)
-
-        loss_value = []
-        acc_value = []
-        self.train_writer.add_scalar('epoch', epoch, self.global_step)
-        self.record_time()
-        timer = dict(dataloader=0.001, model=0.001, statistics=0.001)
-        process = tqdm(loader, ncols=40)
-
-        for batch_idx, (data, label, index) in enumerate(process):
-            self.global_step += 1
-            with torch.no_grad():
-                data = data.float().cuda(self.output_device)
-                label = label.long().cuda(self.output_device)
-            timer['dataloader'] += self.split_time()
-
-            # forward
-            output = self.model(data)
-            loss = self.loss(output, label)
-            # backward
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-
-            loss_value.append(loss.data.item())
-            timer['model'] += self.split_time()
-
-            value, predict_label = torch.max(output.data, 1)
-            acc = torch.mean((predict_label == label.data).float())
-            acc_value.append(acc.data.item())
-            self.train_writer.add_scalar('acc', acc, self.global_step)
-            self.train_writer.add_scalar('loss', loss.data.item(), self.global_step)
-
-            # statistics
-            self.lr = self.optimizer.param_groups[0]['lr']
-            self.train_writer.add_scalar('lr', self.lr, self.global_step)
-            timer['statistics'] += self.split_time()
-
-        # statistics of time consumption and loss
-        proportion = {
-            k: '{:02d}%'.format(int(round(v * 100 / sum(timer.values()))))
-            for k, v in timer.items()
-        }
-        self.print_log(
-            '\tMean training loss: {:.4f}.  Mean training acc: {:.2f}%.'.format(np.mean(loss_value), np.mean(acc_value)*100))
-        self.print_log('\tTime consumption: [Data]{dataloader}, [Network]{model}'.format(**proportion))
-
-        if save_model:
-            state_dict = self.model.state_dict()
-            weights = OrderedDict([[k.split('module.')[-1], v.cpu()] for k, v in state_dict.items()])
-
-            torch.save(weights, self.arg.model_saved_name + '-' + str(epoch+1) + '-' + str(int(self.global_step)) + '.pt')
-
     def eval(self, epoch, save_score=False, loader_name=['test'], wrong_file=None, result_file=None):
-        if wrong_file is not None:
-            f_w = open(wrong_file, 'w')
-        if result_file is not None:
-            f_r = open(result_file, 'w')
         self.model.eval()
         self.print_log('Eval epoch: {}'.format(epoch + 1))
         for ln in loader_name:
@@ -450,120 +370,55 @@ class Processor():
             pred_list = []
             step = 0
             process = tqdm(self.data_loader[ln], ncols=40)
+            output_all = []
+            label_all = []
+
             for batch_idx, (data, label, index) in enumerate(process):
                 label_list.append(label)
                 with torch.no_grad():
                     data = data.float().cuda(self.output_device)
                     label = label.long().cuda(self.output_device)
                     output = self.model(data)
-                    loss = self.loss(output, label)
-                    score_frag.append(output.data.cpu().numpy())
-                    loss_value.append(loss.data.item())
+                    output_all.append(output)
+                    label_all.append(label)
 
-                    _, predict_label = torch.max(output.data, 1)
-                    pred_list.append(predict_label.data.cpu().numpy())
-                    step += 1
+        output_viz = torch.cat(output_all, dim=0)
+        label_viz = torch.cat(label_all, dim=0)
+        output_np = np.array(output_viz.detach().cpu())
+        out_put2 = TSNE(perplexity=30).fit_transform(output_np)
+        label_np = np.array(label_viz.detach().cpu())
 
-                if wrong_file is not None or result_file is not None:
-                    predict = list(predict_label.cpu().numpy())
-                    true = list(label.data.cpu().numpy())
-                    for i, x in enumerate(predict):
-                        if result_file is not None:
-                            f_r.write(str(x) + ',' + str(true[i]) + '\n')
-                        if x != true[i] and wrong_file is not None:
-                            f_w.write(str(index[i]) + ',' + str(x) + ',' + str(true[i]) + '\n')
-            score = np.concatenate(score_frag)
-            loss = np.mean(loss_value)
-            if 'ucla' in self.arg.feeder:
-                self.data_loader[ln].dataset.sample_name = np.arange(len(score))
-            accuracy = self.data_loader[ln].dataset.top_k(score, 1)
-            if accuracy > self.best_acc:
-                self.best_acc = accuracy
-                self.best_acc_epoch = epoch + 1
+        plot(out_put2, label_np)
 
-            print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
-            if self.arg.phase == 'train':
-                self.val_writer.add_scalar('loss', loss, self.global_step)
-                self.val_writer.add_scalar('acc', accuracy, self.global_step)
 
-            score_dict = dict(
-                zip(self.data_loader[ln].dataset.sample_name, score))
-            self.print_log('\tMean {} loss of {} batches: {}.'.format(
-                ln, len(self.data_loader[ln]), np.mean(loss_value)))
-            for k in self.arg.show_topk:
-                self.print_log('\tTop{}: {:.2f}%'.format(
-                    k, 100 * self.data_loader[ln].dataset.top_k(score, k)))
 
-            if save_score:
-                with open('{}/epoch{}_{}_score.pkl'.format(
-                        self.arg.work_dir, epoch + 1, ln), 'wb') as f:
-                    pickle.dump(score_dict, f)
 
-            # acc for each class:
-            label_list = np.concatenate(label_list)
-            pred_list = np.concatenate(pred_list)
-            confusion = confusion_matrix(label_list, pred_list)
-            list_diag = np.diag(confusion)
-            list_raw_sum = np.sum(confusion, axis=1)
-            each_acc = list_diag / list_raw_sum
-            with open('{}/epoch{}_{}_each_class_acc.csv'.format(self.arg.work_dir, epoch + 1, ln), 'w') as f:
-                writer = csv.writer(f)
-                writer.writerow(each_acc)
-                writer.writerows(confusion)
+
+
 
     def start(self):
-        if self.arg.phase == 'train':
-            self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
-            self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
-            def count_parameters(model):
-                return sum(p.numel() for p in model.parameters() if p.requires_grad)
-            self.print_log(f'# Parameters: {count_parameters(self.model)}')
-            for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
-                save_model = (((epoch + 1) % self.arg.save_interval == 0) or (
-                        epoch + 1 == self.arg.num_epoch)) and (epoch+1) > self.arg.save_epoch
-
-                self.train(epoch, save_model=save_model)
-
-                self.eval(epoch, save_score=self.arg.save_score, loader_name=['test'])
-
-            # test the best model
-            weights_path = glob.glob(os.path.join(self.arg.work_dir, 'runs-'+str(self.best_acc_epoch)+'*'))[0]
-            weights = torch.load(weights_path)
-            if type(self.arg.device) is list:
-                if len(self.arg.device) > 1:
-                    weights = OrderedDict([['module.'+k, v.cuda(self.output_device)] for k, v in weights.items()])
-            self.model.load_state_dict(weights)
-
-            wf = weights_path.replace('.pt', '_wrong.txt')
-            rf = weights_path.replace('.pt', '_right.txt')
-            self.arg.print_log = False
-            self.eval(epoch=0, save_score=True, loader_name=['test'], wrong_file=wf, result_file=rf)
-            self.arg.print_log = True
+        if self.arg.phase == 'test':
+            self.eval(epoch=0, save_score=self.arg.save_score, loader_name=['test'])
 
 
-            num_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
-            self.print_log(f'Best accuracy: {self.best_acc}')
-            self.print_log(f'Epoch number: {self.best_acc_epoch}')
-            self.print_log(f'Model name: {self.arg.work_dir}')
-            self.print_log(f'Model total number of params: {num_params}')
-            self.print_log(f'Weight decay: {self.arg.weight_decay}')
-            self.print_log(f'Base LR: {self.arg.base_lr}')
-            self.print_log(f'Batch Size: {self.arg.batch_size}')
-            self.print_log(f'Test Batch Size: {self.arg.test_batch_size}')
-            self.print_log(f'seed: {self.arg.seed}')
+def plot(x, colors):
+    palette = np.array(sb.color_palette("hls", 10))  #Choosing color palette 
 
-        elif self.arg.phase == 'test':
-            wf = self.arg.weights.replace('.pt', '_wrong.txt')
-            rf = self.arg.weights.replace('.pt', '_right.txt')
-
-            if self.arg.weights is None:
-                raise ValueError('Please appoint --weights.')
-            self.arg.print_log = False
-            self.print_log('Model:   {}.'.format(self.arg.model))
-            self.print_log('Weights: {}.'.format(self.arg.weights))
-            self.eval(epoch=0, save_score=self.arg.save_score, loader_name=['test'], wrong_file=wf, result_file=rf)
-            self.print_log('Done.\n')
-
+    # Create a scatter plot.
+    f = plt.figure(figsize=(8, 8))
+    ax = plt.subplot(aspect='equal')
+    sc = ax.scatter(x[:,0], x[:,1], lw=0, s=40, c=palette[colors.astype(np.int32)])
+    # Add the labels for each digit.
+    txts = []
+    for i in range(10):
+        # Position of each label.
+        xtext, ytext = np.median(x[colors == i, :], axis=0)
+        txt = ax.text(xtext, ytext, str(i+1), fontsize=24)
+        txt.set_path_effects([pe.Stroke(linewidth=5, foreground="w"), pe.Normal()])
+        txts.append(txt)
+    plt.show()
+    return f, ax, txts
+    
 if __name__ == '__main__':
     parser = get_parser()
 

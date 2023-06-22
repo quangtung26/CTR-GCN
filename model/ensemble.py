@@ -1,6 +1,4 @@
 import math
-import pdb
-import random
 
 import numpy as np
 import torch
@@ -192,7 +190,7 @@ class CTRGC(nn.Module):
 
 
     def forward(self, x, A=None, alpha=1):
-        x = self.shift_gcn(x)
+        # x = self.shift_gcn(x)
         x1, x2, x3 = self.conv1(x).mean(-2), self.conv2(x).mean(-2), self.conv3(x)
         x1 = self.tanh(x1.unsqueeze(-1) - x2.unsqueeze(-2))
         x1 = self.conv4(x1) * alpha + (A.unsqueeze(0).unsqueeze(0) if A is not None else 0)  # N,C,V,V
@@ -296,7 +294,7 @@ class TCN_GCN_unit(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, num_class=10, num_point=25, num_person=1, graph=None, graph_args=dict(), in_channels=6,
+    def __init__(self, num_class=10, num_point=25, num_person=1, graph=None, graph_args=dict(), in_channels=3,
                  drop_out=0, adaptive=True):
         super(Model, self).__init__()
 
@@ -359,15 +357,120 @@ class Model(nn.Module):
         x = x.mean(3).mean(1)
         x = self.drop_out(x)
 
-        return self.fc(x)
+        # x = self.fc(x)
+
+        return x
+    
+
+
+class Emsemble(nn.Module):
+    def __init__(self, J_weight=None, B_weight=None, JM_weight=None, BM_weight=None):
+        super(Emsemble, self).__init__()
+
+
+        self.J_model = Model(num_class=10, num_point=20, num_person=1, graph="graph.ucla.Graph")
+        self.B_model = Model(num_class=10, num_point=20, num_person=1, graph="graph.ucla.Graph")
+        self.JM_model = Model(num_class=10, num_point=20, num_person=1, graph="graph.ucla.Graph")
+        self.BM_model = Model(num_class=10, num_point=20, num_person=1, graph="graph.ucla.Graph")
+        
+        self.load_model(self.J_model, J_weight)
+        self.load_model(self.B_model, B_weight)
+        self.load_model(self.JM_model, JM_weight)
+        self.load_model(self.BM_model, BM_weight)
+    
+    def load_model(self, model, weight_path):
+        checkpoint = torch.load(weight_path)
+        model.load_state_dict(checkpoint)
+        for parameter in model.parameters():
+            parameter.requires_grad = False
+
+
+    def ensemble(self, J, B, JM, BM):
+        output = torch.concat((J, B), dim=1)
+        return output
+    
+    def forward(self, J_input, B_input, JM_input, BM_input):
+        J = self.J_model(J_input)
+        B = self.B_model(B_input)
+        JM = self.JM_model(JM_input)
+        BM = self.BM_model(BM_input)
+
+        output = self.ensemble(J, B, JM, BM)
+        return output
+
+
+def plot(x, colors):
+    palette = np.array(sb.color_palette("hls", 10))  #Choosing color palette 
+
+    # Create a scatter plot.
+    f = plt.figure(figsize=(8, 8))
+    ax = plt.subplot(aspect='equal')
+    sc = ax.scatter(x[:,0], x[:,1], lw=0, s=40, c=palette[colors.astype(np.int32)])
+    # Add the labels for each digit.
+    txts = []
+    for i in range(10):
+        # Position of each label.
+        xtext, ytext = np.median(x[colors == i, :], axis=0)
+        txt = ax.text(xtext, ytext, str(i+1), fontsize=24)
+        txt.set_path_effects([pe.Stroke(linewidth=5, foreground="w"), pe.Normal()])
+        txts.append(txt)
+    plt.show()
+    return f, ax, txts
 
 
 if __name__ == '__main__':
-    from torchinfo import summary
+    import seaborn as sb
+    from feeders.feeder_ucla import Feeder
+    import os
+    from sklearn.manifold import TSNE 
+    from sklearn.datasets import load_digits # For the UCI ML handwritten digits dataset
 
-    model = Model(num_class=10, num_point=20, num_person=1, graph="graph.ucla.Graph").cuda()
+    import matplotlib
+    import matplotlib.pyplot as plt
+    import matplotlib.patheffects as pe
+
+    from torchinfo import summary
+    J_weight = 'work_dir/ucla_J/ctrgcn_shift10/runs-52-16536.pt'
+    B_weight = 'work_dir/ucla_B/ctrgcn/runs-30-9540.pt'
+    JM_weight = 'work_dir/ucla_JM/ctrgcn_shift10/runs-69-21942.pt'
+    BM_weight = 'work_dir/ucla_BM/ctrgcn/runs-60-19080.pt'
+
+    model = Emsemble(J_weight, B_weight, JM_weight, BM_weight).cuda()
+    model.eval()
     
-    x = torch.randn(1, 3, 52, 20, 1).cuda()
-    # y = model(x)
+    J = Feeder(data_path='joint', label_path='val')
+    B = Feeder(data_path='bone', label_path='val')
+    JM = Feeder(data_path='joint motion', label_path='val')
+    BM = Feeder(data_path='bone motion', label_path='val')
+
+    J_loader = torch.utils.data.DataLoader(dataset=J, batch_size=8)
+    B_loader = torch.utils.data.DataLoader(dataset=J, batch_size=8)
+    JM_loader = torch.utils.data.DataLoader(dataset=J, batch_size=8)
+    BM_loader = torch.utils.data.DataLoader(dataset=J, batch_size=8)
+
+
+    output_all = []
+    label_all = []
+    c = 0
+    for j, b, jm, bm in zip(J_loader, B_loader, JM_loader, BM_loader):
+        with torch.no_grad():
+            c += 1
+            j_ = j[0].float().cuda()
+            b_ = b[0].float().cuda()
+            jm_ = jm[0].float().cuda()
+            bm_ = bm[0].float().cuda()
+            label = j[1].long().cuda()
+            output = model(j_, b_, jm_, bm_)
+            output_all.append(output)
+            label_all.append(label)
+
     
-    summary(model, x.shape)
+    output_viz = torch.cat(output_all, dim=0)
+    label_viz = torch.cat(label_all, dim=0)
+    output_np = np.array(output_viz.detach().cpu())
+    out_put2 = TSNE(perplexity=30).fit_transform(output_np)
+    label_np = np.array(label_viz.detach().cpu())
+
+
+    plot(out_put2, label_np)
+
