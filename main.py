@@ -197,11 +197,6 @@ def get_parser():
         help='decay rate for learning rate')
     
 
-    parser.add_argument(
-        'answer',
-        type=str,
-        default='n',
-        help='answer delete existing work_dir')
     
     parser.add_argument('--warm_up_epoch', type=int, default=0)
 
