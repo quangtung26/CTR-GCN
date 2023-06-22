@@ -47,7 +47,7 @@ def init_seed(seed):
     torch.manual_seed(seed)
     np.random.seed(seed)
     random.seed(seed)
-    # torch.backends.cudnn.enabled = False
+    torch.backends.cudnn.enabled = False
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
@@ -256,14 +256,14 @@ class Processor():
                 dataset=Feeder(**self.arg.train_feeder_args),
                 batch_size=self.arg.batch_size,
                 shuffle=True,
-                # num_workers=self.arg.num_worker,
+                num_workers=self.arg.num_worker,
                 drop_last=True,
                 worker_init_fn=init_seed)
         self.data_loader['test'] = torch.utils.data.DataLoader(
             dataset=Feeder(**self.arg.test_feeder_args),
             batch_size=self.arg.test_batch_size,
             shuffle=False,
-            # num_workers=self.arg.num_worker,
+            num_workers=self.arg.num_worker,
             drop_last=False,
             worker_init_fn=init_seed)
 
