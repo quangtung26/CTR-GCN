@@ -1,7 +1,8 @@
-/data/*
+/data
 /results/*
 /work_dir/*
 /visualization/*
 /__pycache__
 /kaggle_output
+/kaggle_output2
 data.zip
