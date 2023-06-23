@@ -195,7 +195,6 @@ def get_parser():
         type=float,
         default=0.1,
         help='decay rate for learning rate')
-    
 
     
     parser.add_argument('--warm_up_epoch', type=int, default=0)
@@ -283,6 +282,7 @@ class Processor():
 
         if self.arg.weights:
             self.global_step = int(arg.weights[:-3].split('-')[-1])
+            print("Global step: ", self.global_step)
             self.print_log('Load weights from {}.'.format(self.arg.weights))
             if '.pkl' in self.arg.weights:
                 with open(self.arg.weights, 'r') as f:
@@ -509,7 +509,11 @@ class Processor():
     def start(self):
         if self.arg.phase == 'train':
             self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
-            self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
+            print(self.arg.start_epoch)
+            print(len(self.data_loader['train']))
+            print(self.arg.batch_size)
+            # self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
+            print("Global step: ", self.global_step)
             def count_parameters(model):
                 return sum(p.numel() for p in model.parameters() if p.requires_grad)
             self.print_log(f'# Parameters: {count_parameters(self.model)}')
