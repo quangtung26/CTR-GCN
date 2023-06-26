@@ -109,11 +109,35 @@ def import_class(name):
 
 if __name__ == '__main__':
     import torch
-    dataset = Feeder(data_path='data/ntu/NTU60_CV.npz', split='train', window_size=64, p_interval=[0.95])
-    data_loader = torch.utils.data.DataLoader(
-                dataset=dataset, batch_size=4)
-    for x, y, i in data_loader:
-        print(x[0, :, 0, :, :])
-        break
 
-    # print(len(dataset))
+    def init_seed(seed):
+        torch.cuda.manual_seed_all(seed)
+        torch.manual_seed(seed)
+        np.random.seed(seed)
+        random.seed(seed)
+        # torch.backends.cudnn.enabled = False
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+    dataset = Feeder(data_path='data/ntu/NTU60_CV.npz', 
+                     split='test', 
+                     debug=False, 
+                     random_choose=False,
+                     random_shift=False, 
+                     random_move=False,
+                     window_size=64, 
+                     normalization=False,
+                     random_rot=True, 
+                     p_interval=[0.95], 
+                     vel=False,
+                     bone=False)
+    
+    data_loader = torch.utils.data.DataLoader(dataset=dataset, 
+                                              batch_size=64,
+                                              shuffle=True,
+                                              num_workers=2,
+                                              drop_last=True,
+                                              worker_init_fn=init_seed)
+    
+    
+    torch.save(data_loader, "data_loader.pth")

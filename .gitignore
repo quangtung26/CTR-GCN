@@ -10,6 +10,7 @@
 /feeders/__pycache__
 /graph/__pycache__
 /model/__pycache__
+/script
 
 requirements.txt
 README.md
