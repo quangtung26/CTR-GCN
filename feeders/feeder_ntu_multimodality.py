@@ -44,6 +44,8 @@ class Feeder(Dataset):
         if normalization:
             self.get_mean_map()
 
+        self.conn = np.array([2,2,21,3,21,5,6,7,21,9,10,11,1,13,14,15,1,17,18,19,2,23,8,25,12]) - 1
+
     def load_data(self):
         # data: N C V T M
         npz_data = np.load(self.data_path)
@@ -91,7 +93,43 @@ class Feeder(Dataset):
             data_numpy[:, :-1] = data_numpy[:, 1:] - data_numpy[:, :-1]
             data_numpy[:, -1] = 0
 
-        return data_numpy, label, index
+        C, T, V, M = data_numpy.shape
+        joint, velocity, bone = self.multi_input(data_numpy[:, :T, :, :])
+        data_new = []
+
+        data_new.append(joint)
+        # data_new.append(velocity)
+        # data_new.append(bone)
+
+        data_new = np.stack(data_new, axis=0)
+        N_m, C, T, V, M = data_new.shape
+
+        data = data_new.reshape(N_m * C, T, V, M)
+
+        return data, label, index
+    
+
+    def multi_input(self, data):
+        C, T, V, M = data.shape
+        joint = np.zeros((C*2, T, V, M))
+        velocity = np.zeros((C*2, T, V, M))
+        bone = np.zeros((C*2, T, V, M))
+        joint[:C, :, :, :] = data
+        for i in range(V):
+            joint[C:, :, i, :] = data[:, :, i, :] - data[:, :, 1, :]
+        for i in range(T-2):
+            velocity[:C, i, :, :] = data[:, i+1, :, :] - data[:, i, :, :]
+            velocity[C:, i, :, :] = data[:, i+2, :, :] - data[:, i, :, :]
+        for i in range(len(self.conn)):
+            bone[:C, :, i, :] = data[:, :, i, :] - data[:, :, self.conn[i], :]
+        bone_length = 0
+        for i in range(C):
+            bone_length += bone[i, :, :, :] ** 2
+        bone_length = np.sqrt(bone_length) + 0.0001
+        for i in range(C):
+            bone[C+i, :, :, :] = np.arccos(bone[i, :, :, :] / bone_length)
+
+        return joint, velocity, bone
 
     def top_k(self, score, top_k):
         rank = score.argsort()
@@ -109,7 +147,6 @@ def import_class(name):
 
 if __name__ == '__main__':
     import torch
-
 
     dataset = Feeder(data_path='data/ntu/NTU60_CV.npz', 
                      split='test', 
