@@ -172,8 +172,27 @@ class CTRGC(nn.Module):
                 bn_init(m, 1)
     
     
+    def shift_gcn(self, x, k=10): # N, C, T, V
+        N, C, T, V = x.shape
+        n_shift = C * k // 100
+        x_shift = torch.clone(x)
+
+        list_shift = random.sample(range(0, C), 2 * n_shift)
+        forward = torch.tensor(list_shift[:len(list_shift)//2]).long()
+        backward = torch.tensor(list_shift[len(list_shift)//2:]).long()
+
+
+        # first k percent
+        x_shift[:, forward, 0:T-1, :] = x[:, forward, 1:T, :]
+
+        # last k percent
+        x_shift[:, backward, 1:T, :] = x[:, backward, 0:T-1, :]
+
+        return x_shift
+
 
     def forward(self, x, A=None, alpha=1):
+        x = self.shift_gcn(x)
         x1, x2, x3 = self.conv1(x).mean(-2), self.conv2(x).mean(-2), self.conv3(x)
         x1 = self.tanh(x1.unsqueeze(-1) - x2.unsqueeze(-2))
         x1 = self.conv4(x1) * alpha + (A.unsqueeze(0).unsqueeze(0) if A is not None else 0)  # N,C,V,V
