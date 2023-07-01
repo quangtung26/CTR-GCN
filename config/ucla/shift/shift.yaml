@@ -18,12 +18,14 @@ test_feeder_args:
 
 
 # model
-model: model.ensemble.Model
+model: model.ctrgcn_shift.Model
 model_args:
-    J_weight: work_dir/ucla_J/ctrgcn/runs-52-16536.pt
-    B_weight: work_dir/ucla_B/ctrgcn/runs-30-9540.pt
-    JM_weight: work_dir/ucla_JM/ctrgcn/runs-63-20034.pt
-    BM_weight: work_dir/ucla_BM/ctrgcn/runs-60-19080.pt
+  num_class: 10
+  num_point: 20
+  num_person: 1
+  graph: graph.ucla.Graph
+  graph_args:
+    labeling_mode: 'spatial'
 
 #optim
 weight_decay: 0.0001
@@ -35,6 +37,6 @@ step: [50]
 device: [0]
 batch_size: 16
 test_batch_size: 64
-num_epoch: 10
+num_epoch: 65
 nesterov: True
-warm_up_epoch: 0
+warm_up_epoch: 5

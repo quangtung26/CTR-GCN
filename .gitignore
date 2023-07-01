@@ -11,6 +11,7 @@
 /graph/__pycache__
 /model/__pycache__
 /script
+/test
 
 test.ipynb
 requirements.txt
