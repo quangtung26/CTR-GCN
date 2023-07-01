@@ -50,7 +50,6 @@ def import_class(import_str):
 
 
 
-
 class Processor():
     """ 
         Processor for Skeleton-based Action Recgnition

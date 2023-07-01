@@ -83,23 +83,28 @@ class Feeder(Dataset):
         data_numpy = tools.valid_crop_resize(data_numpy, valid_frame_num, self.p_interval, self.window_size)
         if self.random_rot:
             data_numpy = tools.random_rot(data_numpy)
-        if self.bone:
-            from .bone_pairs import ntu_pairs
-            bone_data_numpy = np.zeros_like(data_numpy)
-            for v1, v2 in ntu_pairs:
-                bone_data_numpy[:, :, v1 - 1] = data_numpy[:, :, v1 - 1] - data_numpy[:, :, v2 - 1]
-            data_numpy = bone_data_numpy
-        if self.vel:
-            data_numpy[:, :-1] = data_numpy[:, 1:] - data_numpy[:, :-1]
-            data_numpy[:, -1] = 0
+        # if self.bone:
+        #     from .bone_pairs import ntu_pairs
+        #     bone_data_numpy = np.zeros_like(data_numpy)
+        #     for v1, v2 in ntu_pairs:
+        #         bone_data_numpy[:, :, v1 - 1] = data_numpy[:, :, v1 - 1] - data_numpy[:, :, v2 - 1]
+        #     data_numpy = bone_data_numpy
+        # if self.vel:
+        #     data_numpy[:, :-1] = data_numpy[:, 1:] - data_numpy[:, :-1]
+        #     data_numpy[:, -1] = 0
 
         C, T, V, M = data_numpy.shape
         joint, velocity, bone = self.multi_input(data_numpy[:, :T, :, :])
         data_new = []
 
         data_new.append(joint)
-        # data_new.append(velocity)
-        # data_new.append(bone)
+        if self.bone:
+            data_new = []
+            data_new.append(bone)
+        
+        if self.vel:
+            data_new = []
+            data_new.append(velocity)
 
         data_new = np.stack(data_new, axis=0)
         N_m, C, T, V, M = data_new.shape
@@ -149,7 +154,7 @@ if __name__ == '__main__':
     import torch
 
     dataset = Feeder(data_path='data/ntu/NTU60_CV.npz', 
-                     split='test', 
+                     split='train', 
                      debug=False, 
                      random_choose=False,
                      random_shift=False, 
@@ -159,10 +164,10 @@ if __name__ == '__main__':
                      random_rot=True, 
                      p_interval=[0.95], 
                      vel=False,
-                     bone=False)
+                     bone=True)
     
     data_loader = torch.utils.data.DataLoader(dataset=dataset, 
-                                              batch_size=2)
+                                              batch_size=1)
     
     for x, y, i in data_loader:
         print(x.shape, y)

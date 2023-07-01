@@ -73,7 +73,7 @@ if __name__ == "__main__":
     pred = []
 
     if arg.joint_motion_dir is not None and arg.bone_motion_dir is not None:
-        arg.alpha = [0.6, 0.6, 0.3, 0.3]
+        arg.alpha = [0.6, 0.6, 0.4, 0.4]
         for i in tqdm(range(len(label))):
             l = label[i]
             _, r11 = r1[i]

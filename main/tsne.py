@@ -1,12 +1,13 @@
 from __future__ import print_function
 
-#Import numpy
+# Import numpy
 import numpy as np
 
-#Import scikitlearn for machine learning functionalities
+# Import scikitlearn for machine learning functionalities
 import sklearn
-from sklearn.manifold import TSNE 
-from sklearn.datasets import load_digits # For the UCI ML handwritten digits dataset
+from sklearn.manifold import TSNE
+# For the UCI ML handwritten digits dataset
+from sklearn.datasets import load_digits
 
 # Import matplotlib for plotting graphs ans seaborn for attractive graphics.
 import matplotlib
@@ -42,6 +43,7 @@ from tqdm import tqdm
 
 from torchlight import DictAction
 
+
 def init_seed(seed):
     torch.cuda.manual_seed_all(seed)
     torch.manual_seed(seed)
@@ -51,13 +53,16 @@ def init_seed(seed):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
+
 def import_class(import_str):
     mod_str, _sep, class_str = import_str.rpartition('.')
     __import__(mod_str)
     try:
         return getattr(sys.modules[mod_str], class_str)
     except AttributeError:
-        raise ImportError('Class %s cannot be found (%s)' % (class_str, traceback.format_exception(*sys.exc_info())))
+        raise ImportError('Class %s cannot be found (%s)' % (
+            class_str, traceback.format_exception(*sys.exc_info())))
+
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -96,7 +101,7 @@ def get_parser():
 
     parser.add_argument(
         '--tsne', type=bool, default=False, help='tnse visualization')
-    
+
     parser.add_argument(
         '--seed', type=int, default=1, help='random seed for pytorch')
     parser.add_argument(
@@ -215,8 +220,6 @@ def get_parser():
     return parser
 
 
-
-
 class Processor():
     """ 
         Processor for Skeleton-based Action Recgnition
@@ -239,7 +242,6 @@ class Processor():
         self.best_acc_epoch = 0
 
         self.model = self.model.cuda(self.output_device)
-    
 
         if type(self.arg.device) is list:
             if len(self.arg.device) > 1:
@@ -268,7 +270,8 @@ class Processor():
             worker_init_fn=init_seed)
 
     def load_model(self):
-        output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
+        output_device = self.arg.device[0] if type(
+            self.arg.device) is list else self.arg.device
         self.output_device = output_device
         Model = import_class(self.arg.model)
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
@@ -286,16 +289,19 @@ class Processor():
             else:
                 weights = torch.load(self.arg.weights)
 
-            weights = OrderedDict([[k.split('module.')[-1], v.cuda(output_device)] for k, v in weights.items()])
+            weights = OrderedDict(
+                [[k.split('module.')[-1], v.cuda(output_device)] for k, v in weights.items()])
 
             keys = list(weights.keys())
             for w in self.arg.ignore_weights:
                 for key in keys:
                     if w in key:
                         if weights.pop(key, None) is not None:
-                            self.print_log('Sucessfully Remove Weights: {}.'.format(key))
+                            self.print_log(
+                                'Sucessfully Remove Weights: {}.'.format(key))
                         else:
-                            self.print_log('Can Not Remove Weights: {}.'.format(key))
+                            self.print_log(
+                                'Can Not Remove Weights: {}.'.format(key))
 
             try:
                 self.model.load_state_dict(weights)
@@ -324,7 +330,8 @@ class Processor():
         else:
             raise ValueError()
 
-        self.print_log('using warm up, epoch: {}'.format(self.arg.warm_up_epoch))
+        self.print_log('using warm up, epoch: {}'.format(
+            self.arg.warm_up_epoch))
 
     def save_arg(self):
         # save arg
@@ -334,7 +341,6 @@ class Processor():
         with open('{}/config.yaml'.format(self.arg.work_dir), 'w') as f:
             f.write(f"# command line: {' '.join(sys.argv)}\n\n")
             yaml.dump(arg_dict, f)
-
 
     def print_time(self):
         localtime = time.asctime(time.localtime(time.time()))
@@ -348,8 +354,6 @@ class Processor():
         if self.arg.print_log:
             with open('{}/log.txt'.format(self.arg.work_dir), 'a') as f:
                 print(str, file=f)
-    
-
 
     def record_time(self):
         self.cur_time = time.time()
@@ -388,37 +392,36 @@ class Processor():
         out_put2 = TSNE(perplexity=30).fit_transform(output_np)
         label_np = np.array(label_viz.detach().cpu())
 
-        plot(out_put2, label_np)
-
-
-
-
-
+        plot(   out_put2, label_np)
 
 
     def start(self):
         if self.arg.phase == 'test':
-            self.eval(epoch=0, save_score=self.arg.save_score, loader_name=['test'])
+            self.eval(epoch=0, save_score=self.arg.save_score,
+                      loader_name=['test'])
 
 
 def plot(x, colors):
-    palette = np.array(sb.color_palette("hls", 10))  #Choosing color palette 
+    palette = np.array(sb.color_palette("hls", 10))  # Choosing color palette
 
     # Create a scatter plot.
     f = plt.figure(figsize=(8, 8))
     ax = plt.subplot(aspect='equal')
-    sc = ax.scatter(x[:,0], x[:,1], lw=0, s=40, c=palette[colors.astype(np.int32)])
+    sc = ax.scatter(x[:, 0], x[:, 1], lw=0, s=40,
+                    c=palette[colors.astype(np.int32)])
     # Add the labels for each digit.
     txts = []
     for i in range(10):
         # Position of each label.
         xtext, ytext = np.median(x[colors == i, :], axis=0)
         txt = ax.text(xtext, ytext, str(i+1), fontsize=24)
-        txt.set_path_effects([pe.Stroke(linewidth=5, foreground="w"), pe.Normal()])
+        txt.set_path_effects(
+            [pe.Stroke(linewidth=5, foreground="w"), pe.Normal()])
         txts.append(txt)
     plt.show()
     return f, ax, txts
-    
+
+
 if __name__ == '__main__':
     parser = get_parser()
 
