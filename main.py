@@ -215,8 +215,8 @@ class Processor():
                 arg.model_saved_name = os.path.join(arg.work_dir, 'runs')
                 if os.path.isdir(arg.model_saved_name):
                     print('log_dir: ', arg.model_saved_name, 'already exist')
-                    # answer = input('delete it? y/n:')
-                    answer = 'n'
+                    answer = input('delete it? y/n:')
+                    # answer = 'n'
                     if answer == 'y':
                         shutil.rmtree(arg.model_saved_name)
                         print('Dir removed: ', arg.model_saved_name)
@@ -509,9 +509,6 @@ class Processor():
     def start(self):
         if self.arg.phase == 'train':
             self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
-            print(self.arg.start_epoch)
-            print(len(self.data_loader['train']))
-            print(self.arg.batch_size)
             # self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
             print("Global step: ", self.global_step)
             def count_parameters(model):

@@ -381,8 +381,8 @@ class Emsemble(nn.Module):
     def load_model(self, model, weight_path):
         checkpoint = torch.load(weight_path)
         model.load_state_dict(checkpoint)
-        for parameter in model.parameters():
-            parameter.requires_grad = False
+        # for parameter in model.parameters():
+        #     parameter.requires_grad = False
 
 
     def ensemble(self, J, B, JM, BM):
