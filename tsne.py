@@ -233,6 +233,7 @@ class Processor():
             label_all = []
 
             for batch_idx, (data, label, index) in enumerate(self.data_loader[ln]):
+                print(batch_idx)
                 label_list.append(label)
                 with torch.no_grad():
                     data = data.float().cuda(self.output_device)
@@ -256,8 +257,8 @@ class Processor():
         
 
 
-def plot(x, colors):
-    palette = np.array(sb.color_palette("hls", 10))  # Choosing color palette
+def plot(x, colors, num_class=60):
+    palette = np.array(sb.color_palette("hls", num_class))  # Choosing color palette
 
     # Create a scatter plot.
     f = plt.figure(figsize=(8, 8))
@@ -266,7 +267,7 @@ def plot(x, colors):
                     c=palette[colors.astype(np.int32)])
     # Add the labels for each digit.
     txts = []
-    for i in range(10):
+    for i in range(num_class):
         # Position of each label.
         xtext, ytext = np.median(x[colors == i, :], axis=0)
         txt = ax.text(xtext, ytext, str(i+1), fontsize=24)
