@@ -7,7 +7,7 @@ import math
 from torch.utils.data import Dataset
 
 class Feeder(Dataset):
-    def __init__(self, data_path, label_path, repeat=5, random_choose=True, random_shift=False, random_move=False,
+    def __init__(self, data_path, label_path, repeat=1, random_choose=True, random_shift=False, random_move=False,
                  window_size=52, normalization=False, debug=False, use_mmap=True):
 
         if 'val' in label_path:
@@ -152,9 +152,11 @@ class Feeder(Dataset):
 
 if __name__ == '__main__':
     import torch
-    dataset = Feeder(data_path='joint', label_path='train')
-    data_loader = torch.utils.data.DataLoader(
-                dataset=dataset, batch_size=4)
+    import numpy as np
+    dataset = Feeder(data_path='bone', label_path='val')
+    data_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=64)
     for x, y, i in data_loader:
-        print(x.shape, y)
+        print(x.shape)
         break
+
+    print(len(data_loader))

@@ -135,7 +135,7 @@ class Feeder(Dataset):
             value = scalerValue[:, :, :]
             length = value.shape[0]
 
-            idx = np.linspace(0, length-1, self.time_steps).astype(np.int)
+            idx = np.linspace(0, length-1, self.time_steps).astype(np.int32)
             data[:, :, :] = value[idx, :, :]  # T,V,C
 
         if 'bone' in self.data_path:
@@ -198,8 +198,10 @@ class Feeder(Dataset):
 if __name__ == '__main__':
     import torch
     import numpy as np
-    dataset = Feeder(data_path='bone', label_path='train')
-    data_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=1)
+    dataset = Feeder(data_path='bone', label_path='val')
+    data_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=64)
     for x, y, i in data_loader:
         print(x.shape, y)
         break
+
+    print(len(data_loader))

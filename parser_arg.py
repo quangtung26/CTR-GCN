@@ -152,5 +152,6 @@ def get_parser():
 
     
     parser.add_argument('--warm_up_epoch', type=int, default=0)
+    parser.add_argument('--tsne', type=bool, default=False)
 
     return parser
