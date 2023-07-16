@@ -233,7 +233,6 @@ class Processor():
             label_all = []
 
             for batch_idx, (data, label, index) in enumerate(self.data_loader[ln]):
-                print(batch_idx)
                 label_list.append(label)
                 with torch.no_grad():
                     data = data.float().cuda(self.output_device)
@@ -241,6 +240,9 @@ class Processor():
                     output = self.model(data)
                     output_all.append(output)
                     label_all.append(label)
+                
+                if batch_idx == 0:
+                    break
 
         output_viz = torch.cat(output_all, dim=0)
         label_viz = torch.cat(label_all, dim=0)
@@ -248,7 +250,8 @@ class Processor():
         out_put2 = TSNE(perplexity=30).fit_transform(output_np)
         label_np = np.array(label_viz.detach().cpu())
 
-        plot(out_put2, label_np)
+        a, b, c = plot(out_put2, label_np)
+        print(a)
 
 
     def start(self):
