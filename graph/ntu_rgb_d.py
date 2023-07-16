@@ -1,4 +1,4 @@
-import sys
+import os, sys
 import numpy as np
 
 sys.path.extend(['../'])
@@ -31,3 +31,22 @@ class Graph:
         else:
             raise ValueError()
         return A
+
+class FuseGraph:
+    def __init__(self, labeling_mode='spatial', topo_str='-'):
+        self.num_node = num_node
+        self.self_link = self_link
+        self.inward = inward
+        self.outward = outward
+        self.neighbor = neighbor
+        self.AP = np.load(os.path.join(os.path.dirname(__file__), 'matrix', topo_str + '.npy'))
+        self.A = self.get_adjacency_matrix(labeling_mode)
+
+    def get_adjacency_matrix(self, labeling_mode=None):
+        if labeling_mode is None:
+            return self.A
+        if labeling_mode == 'spatial':
+            A = tools.get_spatial_graph(num_node, self_link, inward, outward)
+        else:
+            raise ValueError()
+        return A + self.AP[None]
