@@ -340,9 +340,9 @@ class Model(nn.Module):
         x = x.mean(3).mean(1)
         x = self.drop_out(x)
 
-        return x
+        # return x
     
-        # return self.fc(x)
+        return self.fc(x)
 
 
 if __name__ == '__main__':
