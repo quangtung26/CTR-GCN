@@ -366,11 +366,15 @@ class Model(nn.Module):
 
 
 if __name__ == '__main__':
-    from torchinfo import summary
+    # from torchinfo import summary
+    from torchsummary import summary
+    graph = 'graph.ntu_rgb_d.Graph'
 
-    model = Model(num_class=10, num_point=20, num_person=1, graph="graph.ucla.Graph").cuda()
+    model = Model(num_class=60, num_point=25, num_person=2, graph=graph).cuda()
     
-    x = torch.randn(1, 3, 52, 20, 1).cuda()
-    # y = model(x)
+    x = torch.randn(1, 3, 60, 25, 2).cuda()
+    # y1, y2 = model(x)
+
+    # print(y1.shape, y2.shape)
     
-    summary(model, x.shape)
+    summary(model, (3, 60, 25, 2))
