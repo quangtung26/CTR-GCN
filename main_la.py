@@ -217,7 +217,7 @@ def get_parser():
     parser.add_argument('--warm_up_epoch', type=int, default=0)
     # force rerun
     parser.add_argument(
-        '--force-rerun', type=str2bool, default=False, help='force rerun or not')
+        '--force-rerun', type=str2bool, default=True, help='force rerun or not')
 
     return parser
 
