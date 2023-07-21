@@ -15,7 +15,7 @@ train_feeder_args:
   random_rot: True
   p_interval: [0.5, 1]
   vel: True
-  bone: Truê
+  bone: True
 
 test_feeder_args:
   data_path: data/ntu/NTU60_CV.npz
