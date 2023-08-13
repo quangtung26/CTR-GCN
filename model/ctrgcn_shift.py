@@ -360,7 +360,7 @@ class Model(nn.Module):
         # print(x.shape)
         # return x
     
-        return self.fc(x)
+        return self.fc(x)f
 
 
 if __name__ == '__main__':

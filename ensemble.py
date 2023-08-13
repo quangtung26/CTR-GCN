@@ -127,8 +127,8 @@ if __name__ == "__main__":
     list_raw_sum = np.sum(confusion, axis=1)
     each_acc = list_diag / list_raw_sum
 
-    # print(each_acc)
-    # print(confusion)
+    print(each_acc)
+    print(confusion)
 
     print('Top1 Acc: {:.4f}%'.format(acc * 100))
     print('Top5 Acc: {:.4f}%'.format(acc5 * 100))
@@ -136,8 +136,9 @@ if __name__ == "__main__":
     acc = [acc*100]
 
     # ensemble_type = input("ensemble type: ")
-    # with open(f'results/{ensemble_type}.csv', 'w', newline='') as f:
-    #     writer = csv.writer(f)
-    #     writer.writerow(acc)
-    #     writer.writerow(each_acc)
-    #     writer.writerows(confusion)
+    ensemble_type = 'ucla/temp'
+    with open(f'results/{ensemble_type}.csv', 'w', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(acc)
+        writer.writerow(each_acc)
+        writer.writerows(confusion)

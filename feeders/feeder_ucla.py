@@ -7,7 +7,7 @@ import math
 from torch.utils.data import Dataset
 
 class Feeder(Dataset):
-    def __init__(self, data_path, label_path, repeat=1, random_choose=True, random_shift=False, random_move=False,
+    def __init__(self, data_path, label_path, repeat=2, random_choose=True, random_shift=False, random_move=False,
                  window_size=52, normalization=False, debug=False, use_mmap=True):
 
         if 'val' in label_path:
