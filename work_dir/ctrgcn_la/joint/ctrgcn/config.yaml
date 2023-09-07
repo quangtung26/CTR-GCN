@@ -1,0 +1,72 @@
+# command line: main_la.py --config config/nturgbd-cross-view/ctrgcn_la/joint.yaml --work-dir work_dir/ctrgcn_la/joint/ctrgcn --device 0
+
+aux_weight: 0.2
+base_lr: 0.1
+batch_size: 16
+config: config/nturgbd-cross-view/ctrgcn_la/joint.yaml
+device:
+- 0
+eval_interval: 5
+feeder: feeders.feeder_ntu.Feeder
+force_rerun: false
+ignore_weights: []
+log_interval: 100
+lr_decay_rate: 0.1
+model: model.ctrgcn_la.Model
+model_args:
+  examplar: graph.cls_examplar.CLSExamplar
+  examplar_args:
+    topo_str: what_will_[J]_act_like_when_[C]-with-punctuation
+  graph: graph.ntu_rgb_d.Graph
+  graph_args:
+    labeling_mode: spatial
+  num_class: 60
+  num_person: 2
+  num_point: 25
+model_saved_name: ''
+nesterov: true
+num_epoch: 65
+num_worker: 8
+optimizer: SGD
+phase: train
+print_log: true
+save_epoch: 10
+save_interval: 1
+save_score: false
+seed: 1
+show_topk:
+- 1
+- 5
+start_epoch: 0
+step:
+- 35
+- 55
+test_batch_size: 16
+test_feeder_args:
+  bone: false
+  data_path: data/ntu/NTU60_CV.npz
+  debug: false
+  p_interval:
+  - 0.95
+  split: test
+  vel: false
+  window_size: 64
+train_feeder_args:
+  bone: false
+  data_path: data/ntu/NTU60_CV.npz
+  debug: false
+  normalization: false
+  p_interval:
+  - 0.5
+  - 1
+  random_choose: false
+  random_move: false
+  random_rot: true
+  random_shift: false
+  split: train
+  vel: false
+  window_size: 64
+warm_up_epoch: 5
+weight_decay: 0.0004
+weights: null
+work_dir: work_dir/ctrgcn_la/joint/ctrgcn
