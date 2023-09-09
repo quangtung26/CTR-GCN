@@ -9,3 +9,4 @@
 
 [ Thu Sep  7 10:24:11 2023 ] # Parameters: 1750427
 [ Thu Sep  7 10:24:11 2023 ] Training epoch: 1
+[ Sat Sep  9 09:48:43 2023 ] using warm up, epoch: 5

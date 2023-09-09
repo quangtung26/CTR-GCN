@@ -314,6 +314,11 @@ class Model(nn.Module):
 
         self.GPR = np.array(self.examplar.mean(0).reshape(1, self.num_point, self.num_point))
         A = np.concatenate((A_physical, self.GPR), axis=0)
+        
+        # A = A_physical
+
+
+        # print(A.shape)
 
 
 
@@ -365,18 +370,18 @@ class Model(nn.Module):
         # N*M,C,T,V
         c_new = x.size(1)
 
-        # aux branch
-        aux_x = x.mean(2)
-        # N * M, C, V -> N * M, C, n_cls, V
-        aux_x = torch.einsum('nmv,cvu->nmcu', aux_x, self.examplar)
-        #  N * M, C, n_cls, V ->  N * M, n_cls, V
-        aux_x = self.aux_fc(aux_x)
-        aux_x = aux_x.squeeze(1)
-        # N * M, n_cls, V -> N * M, n_cls
-        aux_x = aux_x.mean(2)
+        ##################### aux branch #####################
+        # aux_x = x.mean(2)
+        # # N * M, C, V -> N * M, C, n_cls, V
+        # aux_x = torch.einsum('nmv,cvu->nmcu', aux_x, self.examplar)
+        # #  N * M, C, n_cls, V ->  N * M, n_cls, V
+        # aux_x = self.aux_fc(aux_x)
+        # aux_x = aux_x.squeeze(1)
+        # # N * M, n_cls, V -> N * M, n_cls
+        # aux_x = aux_x.mean(2)
 
-        aux_x = aux_x.reshape(N, M, self.num_class)
-        aux_x = aux_x.mean(dim=1)
+        # aux_x = aux_x.reshape(N, M, self.num_class)
+        # aux_x = aux_x.mean(dim=1)
 
 
         x = x.view(N, M, c_new, -1)
@@ -385,7 +390,9 @@ class Model(nn.Module):
 
 
 
-        return self.fc(x), aux_x
+        return self.fc(x)
+        # return self.fc(x), aux_x
+
 
 
 if __name__ == '__main__':
@@ -398,8 +405,8 @@ if __name__ == '__main__':
     model = Model(num_class=60, num_point=25, num_person=2, examplar=examplar, examplar_args= examplar_arg, graph=graph).cuda()
     
     x = torch.randn(1, 3, 60, 25, 2).cuda()
-    y1, y2 = model(x)
+    y1 = model(x)
 
-    # print(y1.shape, y2.shape)
+    print(y1.shape)
     
     summary(model, (3, 60, 25, 2))

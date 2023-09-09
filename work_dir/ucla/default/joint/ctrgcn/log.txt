@@ -20,3 +20,15 @@
 [ Thu Sep  7 10:40:16 2023 ] 	Top1: 67.46%
 [ Thu Sep  7 10:40:16 2023 ] 	Top5: 98.06%
 [ Thu Sep  7 10:40:16 2023 ] Training epoch: 2
+[ Sat Sep  9 09:49:50 2023 ] using warm up, epoch: 5
+[ Sat Sep  9 09:49:54 2023 ] Parameters:
+{'work_dir': 'work_dir/ucla/default/joint/ctrgcn', 'model_saved_name': 'work_dir/ucla/default/joint/ctrgcn/runs', 'config': 'config/ucla/default/default_la.yaml', 'phase': 'train', 'save_score': False, 'seed': 1, 'log_interval': 100, 'save_interval': 1, 'save_epoch': 10, 'eval_interval': 5, 'print_log': True, 'show_topk': [1, 5], 'feeder': 'feeders.feeder_ucla.Feeder', 'num_worker': 8, 'train_feeder_args': {'data_path': 'joint', 'label_path': 'train', 'debug': False, 'random_choose': True, 'random_shift': False, 'random_move': False, 'window_size': 52, 'normalization': False, 'repeat': 5}, 'test_feeder_args': {'data_path': 'joint', 'label_path': 'val', 'debug': False}, 'model': 'model.ctrgcn_la.Model', 'model_args': {'num_class': 10, 'num_point': 20, 'num_person': 1, 'graph': 'graph.ucla.Graph', 'graph_args': {'labeling_mode': 'spatial'}, 'examplar': 'graph.cls_examplar.CLSExamplar', 'examplar_args': {'topo_str': 'what_will_[J]_act_like_when_[C]-with-punctuation', 'base_dir': 'cls_matrix_NWUCLA'}}, 'weights': None, 'ignore_weights': [], 'base_lr': 0.1, 'step': [70, 90], 'device': [0], 'optimizer': 'SGD', 'nesterov': True, 'batch_size': 16, 'test_batch_size': 64, 'start_epoch': 0, 'num_epoch': 65, 'weight_decay': 0.0001, 'lr_decay_rate': 0.1, 'aux_weight': 0.2, 'warm_up_epoch': 5, 'force_rerun': False}
+
+[ Sat Sep  9 09:49:54 2023 ] # Parameters: 1728397
+[ Sat Sep  9 09:49:54 2023 ] Training epoch: 1
+[ Sat Sep  9 09:50:35 2023 ] using warm up, epoch: 5
+[ Sat Sep  9 09:50:38 2023 ] Parameters:
+{'work_dir': 'work_dir/ucla/default/joint/ctrgcn', 'model_saved_name': 'work_dir/ucla/default/joint/ctrgcn/runs', 'config': 'config/ucla/default/default_la.yaml', 'phase': 'train', 'save_score': False, 'seed': 1, 'log_interval': 100, 'save_interval': 1, 'save_epoch': 10, 'eval_interval': 5, 'print_log': True, 'show_topk': [1, 5], 'feeder': 'feeders.feeder_ucla.Feeder', 'num_worker': 8, 'train_feeder_args': {'data_path': 'joint', 'label_path': 'train', 'debug': False, 'random_choose': True, 'random_shift': False, 'random_move': False, 'window_size': 52, 'normalization': False, 'repeat': 5}, 'test_feeder_args': {'data_path': 'joint', 'label_path': 'val', 'debug': False}, 'model': 'model.ctrgcn_la.Model', 'model_args': {'num_class': 10, 'num_point': 20, 'num_person': 1, 'graph': 'graph.ucla.Graph', 'graph_args': {'labeling_mode': 'spatial'}, 'examplar': 'graph.cls_examplar.CLSExamplar', 'examplar_args': {'topo_str': 'what_will_[J]_act_like_when_[C]-with-punctuation', 'base_dir': 'cls_matrix_NWUCLA'}}, 'weights': None, 'ignore_weights': [], 'base_lr': 0.1, 'step': [70, 90], 'device': [0], 'optimizer': 'SGD', 'nesterov': True, 'batch_size': 16, 'test_batch_size': 64, 'start_epoch': 0, 'num_epoch': 65, 'weight_decay': 0.0001, 'lr_decay_rate': 0.1, 'aux_weight': 0.2, 'warm_up_epoch': 5, 'force_rerun': False}
+
+[ Sat Sep  9 09:50:38 2023 ] # Parameters: 1728397
+[ Sat Sep  9 09:50:38 2023 ] Training epoch: 1

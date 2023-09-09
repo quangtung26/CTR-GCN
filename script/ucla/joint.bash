@@ -1,5 +1,5 @@
 python main_la.py \
-    --config config/ucla/default/default_la.yaml\
+    --config/nturgbd-cross-view/ctrgcn_la/joint.yaml\
     --work-dir work_dir/ucla/default/joint/ctrgcn \
     --device 0 \
     --batch-size 16 \
