@@ -171,8 +171,26 @@ class CTRGC(nn.Module):
             elif isinstance(m, nn.BatchNorm2d):
                 bn_init(m, 1)
     
+    def shift_gcn(self, x, k=10): # N, C, T, V
+        N, C, T, V = x.shape
+        n_shift = C * k // 100
+        x_shift = torch.clone(x)
+
+        list_shift = random.sample(range(0, C), 2 * n_shift)
+        forward = torch.tensor(list_shift[:len(list_shift)//2]).long()
+        backward = torch.tensor(list_shift[len(list_shift)//2:]).long()
+
+
+        # first k percent
+        x_shift[:, forward, 0:T-1, :] = x[:, forward, 1:T, :]
+
+        # last k percent
+        x_shift[:, backward, 1:T, :] = x[:, backward, 0:T-1, :]
+
+        return x_shift
     
     def forward(self, x, A=None, alpha=1):
+        # x = self.shift_gcn(x)
         x1, x2, x3 = self.conv1(x).mean(-2), self.conv2(x).mean(-2), self.conv3(x)
         x1 = self.tanh(x1.unsqueeze(-1) - x2.unsqueeze(-2))
         x1 = self.conv4(x1) * alpha + (A.unsqueeze(0).unsqueeze(0) if A is not None else 0)  # N,C,V,V
@@ -276,7 +294,7 @@ class TCN_GCN_unit(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, num_class=10, num_point=25, num_person=1, graph=None, graph_args=dict(), examplar=None, examplar_args=dict(), in_channels=6,
+    def __init__(self, num_class=10, num_point=25, num_person=1, graph=None, graph_args=dict(), examplar=None, examplar_args=dict(), in_channels=3,
                  drop_out=0, adaptive=True):
         super(Model, self).__init__()
 
@@ -296,6 +314,11 @@ class Model(nn.Module):
 
         self.GPR = np.array(self.examplar.mean(0).reshape(1, self.num_point, self.num_point))
         A = np.concatenate((A_physical, self.GPR), axis=0)
+        
+        # A = A_physical
+
+
+        # print(A.shape)
 
 
 
@@ -314,7 +337,7 @@ class Model(nn.Module):
         self.l10 = TCN_GCN_unit(base_channel*4, base_channel*4, A, adaptive=adaptive)
 
         self.fc = nn.Linear(base_channel*4, num_class)
-        self.aux_fc = nn.Conv2d(base_channel*4, 1, 1, 1)
+        # self.aux_fc = nn.Conv2d(base_channel*4, 1, 1, 1)
 
         nn.init.normal_(self.fc.weight, 0, math.sqrt(2. / num_class))
         bn_init(self.data_bn, 1)
@@ -347,18 +370,18 @@ class Model(nn.Module):
         # N*M,C,T,V
         c_new = x.size(1)
 
-        # aux branch
-        aux_x = x.mean(2)
-        # N * M, C, V -> N * M, C, n_cls, V
-        aux_x = torch.einsum('nmv,cvu->nmcu', aux_x, self.examplar)
-        #  N * M, C, n_cls, V ->  N * M, n_cls, V
-        aux_x = self.aux_fc(aux_x)
-        aux_x = aux_x.squeeze(1)
-        # N * M, n_cls, V -> N * M, n_cls
-        aux_x = aux_x.mean(2)
+        ##################### aux branch #####################
+        # aux_x = x.mean(2)
+        # # N * M, C, V -> N * M, C, n_cls, V
+        # aux_x = torch.einsum('nmv,cvu->nmcu', aux_x, self.examplar)
+        # #  N * M, C, n_cls, V ->  N * M, n_cls, V
+        # aux_x = self.aux_fc(aux_x)
+        # aux_x = aux_x.squeeze(1)
+        # # N * M, n_cls, V -> N * M, n_cls
+        # aux_x = aux_x.mean(2)
 
-        aux_x = aux_x.reshape(N, M, self.num_class)
-        aux_x = aux_x.mean(dim=1)
+        # aux_x = aux_x.reshape(N, M, self.num_class)
+        # aux_x = aux_x.mean(dim=1)
 
 
         x = x.view(N, M, c_new, -1)
@@ -367,21 +390,22 @@ class Model(nn.Module):
 
 
 
-        return self.fc(x), aux_x
+        return self.fc(x)
+
 
 
 if __name__ == '__main__':
-    # from torchinfo import summary
-    from torchsummary import summary
+    from torchinfo import summary
+    # from torchsummary import summary
     graph = 'graph.ntu_rgb_d.Graph'
     examplar = 'graph.cls_examplar.CLSExamplar'
     examplar_arg = {'topo_str':  "what_will_[J]_act_like_when_[C]-with-punctuation",
                     'base_dir': 'cls_matrix'}
     model = Model(num_class=60, num_point=25, num_person=2, examplar=examplar, examplar_args= examplar_arg, graph=graph).cuda()
     
-    x = torch.randn(1, 3, 60, 25, 2).cuda()
-    y1, y2 = model(x)
-
-    # print(y1.shape, y2.shape)
     
-    summary(model, (3, 60, 25, 2))
+    summary(model, (1, 3, 64, 25, 2))
+
+    def count_parameters(model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f'# Parameters: {count_parameters(model)}')

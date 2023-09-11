@@ -371,17 +371,17 @@ class Model(nn.Module):
         c_new = x.size(1)
 
         ##################### aux branch #####################
-        # aux_x = x.mean(2)
-        # # N * M, C, V -> N * M, C, n_cls, V
-        # aux_x = torch.einsum('nmv,cvu->nmcu', aux_x, self.examplar)
-        # #  N * M, C, n_cls, V ->  N * M, n_cls, V
-        # aux_x = self.aux_fc(aux_x)
-        # aux_x = aux_x.squeeze(1)
-        # # N * M, n_cls, V -> N * M, n_cls
-        # aux_x = aux_x.mean(2)
+        aux_x = x.mean(2)
+        # N * M, C, V -> N * M, C, n_cls, V
+        aux_x = torch.einsum('nmv,cvu->nmcu', aux_x, self.examplar)
+        #  N * M, C, n_cls, V ->  N * M, n_cls, V
+        aux_x = self.aux_fc(aux_x)
+        aux_x = aux_x.squeeze(1)
+        # N * M, n_cls, V -> N * M, n_cls
+        aux_x = aux_x.mean(2)
 
-        # aux_x = aux_x.reshape(N, M, self.num_class)
-        # aux_x = aux_x.mean(dim=1)
+        aux_x = aux_x.reshape(N, M, self.num_class)
+        aux_x = aux_x.mean(dim=1)
 
 
         x = x.view(N, M, c_new, -1)
@@ -390,23 +390,22 @@ class Model(nn.Module):
 
 
 
-        return self.fc(x)
-        # return self.fc(x), aux_x
+        return self.fc(x), aux_x
 
 
 
 if __name__ == '__main__':
-    # from torchinfo import summary
-    from torchsummary import summary
+    from torchinfo import summary
+    # from torchsummary import summary
     graph = 'graph.ntu_rgb_d.Graph'
     examplar = 'graph.cls_examplar.CLSExamplar'
     examplar_arg = {'topo_str':  "what_will_[J]_act_like_when_[C]-with-punctuation",
                     'base_dir': 'cls_matrix'}
     model = Model(num_class=60, num_point=25, num_person=2, examplar=examplar, examplar_args= examplar_arg, graph=graph).cuda()
     
-    x = torch.randn(1, 3, 60, 25, 2).cuda()
-    y1 = model(x)
-
-    print(y1.shape)
     
-    summary(model, (3, 60, 25, 2))
+    summary(model, (1, 3, 64, 25, 2))
+
+    def count_parameters(model):
+        return sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f'# Parameters: {count_parameters(model)}')
