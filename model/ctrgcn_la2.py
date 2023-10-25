@@ -389,7 +389,6 @@ class Model(nn.Module):
         x = self.drop_out(x)
 
 
-
         return self.fc(x)
 
 
