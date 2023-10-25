@@ -430,7 +430,7 @@ class Processor():
             self.train_writer.add_scalar('lr', self.lr, self.global_step)
             timer['statistics'] += self.split_time()
 
-            break
+            # break
 
         # statistics of time consumption and loss
         proportion = {
