@@ -241,8 +241,8 @@ class WeightSumLoss(nn.Module):
         self.loss = nn.CrossEntropyLoss()
         self.aux_loss = nn.CrossEntropyLoss()
 
-    def forward(self, x, label):
-        return self.loss(x, label)
+    def forward(self, x, aux, label):
+        return self.loss(x, label) + self.weight * self.aux_loss(aux, label)
 
 class Processor():
     """ 
@@ -318,9 +318,9 @@ class Processor():
         self.output_device = output_device
         Model = import_class(self.arg.model)
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
-        print(Model)
+        # print(Model)
         self.model = Model(**self.arg.model_args)
-        print(self.model)
+        # print(self.model)
         self.loss = WeightSumLoss(weight=self.arg.aux_weight).cuda(output_device)
 
         if self.arg.weights:
