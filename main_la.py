@@ -221,16 +221,16 @@ def get_parser():
 
     return parser
 
-# class WeightSumLoss(nn.Module):
-#     def __init__(self, weight=0.1):
-#         super().__init__()
-#         self.weight = weight
+class WeightSumLoss(nn.Module):
+    def __init__(self, weight=0.1):
+        super().__init__()
+        self.weight = weight
 
-#         self.loss = nn.CrossEntropyLoss()
-#         self.aux_loss = nn.CrossEntropyLoss()
+        self.loss = nn.CrossEntropyLoss()
+        self.aux_loss = nn.CrossEntropyLoss()
 
-#     def forward(self, x, aux, label):
-#         return self.loss(x, label) + self.weight * self.aux_loss(aux, label)
+    def forward(self, x, aux, label):
+        return self.loss(x, label) + self.weight * self.aux_loss(aux, label)
     
 
 class WeightSumLoss(nn.Module):
@@ -437,13 +437,13 @@ class Processor():
             timer['dataloader'] += self.split_time()
 
             # forward
-            # output, aux_output = self.model(data)
-            # loss = self.loss(output, aux_output , label)
+            output, aux_output = self.model(data)
+            loss = self.loss(output, aux_output , label)
 
 
             ###########################################
-            output = self.model(data)
-            loss = self.loss(output, label)
+            # output = self.model(data)
+            # loss = self.loss(output, label)
             ###########################################
 
             # backward
@@ -501,12 +501,12 @@ class Processor():
                 with torch.no_grad():
                     data = data.float().cuda(self.output_device)
                     label = label.long().cuda(self.output_device)
-                    # output, aux_output = self.model(data)
-                    # loss = self.loss(output, aux_output , label)
+                    output, aux_output = self.model(data)
+                    loss = self.loss(output, aux_output , label)
 
                     ###########################################
-                    output = self.model(data)
-                    loss = self.loss(output, label)
+                    # output = self.model(data)
+                    # loss = self.loss(output, label)
                     ###########################################
 
                     score_frag.append(output.data.cpu().numpy())
